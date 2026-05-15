@@ -109,7 +109,7 @@ public class Grave {
 
         entity.onInteract(event -> {
             Scheduler.get().runAt(location, task -> {
-                interact(event.getPlayer(), event.getHand());
+                interact(event.getPlayer(), event.getHand(), true);
             });
         });
 
@@ -134,7 +134,7 @@ public class Grave {
         }
     }
 
-    public void interact(@NotNull Player opener, ServerboundInteractWrapper.InteractionHand slot) {
+    public void interact(@NotNull Player opener, ServerboundInteractWrapper.InteractionHand slot, boolean isRightClick) {
         if (CONFIG.getBoolean("interact-only-own", false) && !opener.getUniqueId().equals(player.getUniqueId()) && !opener.hasPermission("axgraves.admin")) {
             MESSAGEUTILS.sendLang(opener, "interact.not-your-grave");
             return;
@@ -149,12 +149,19 @@ public class Grave {
             this.storedXP = 0;
         }
 
-        if (slot != null && slot.equals(ServerboundInteractWrapper.InteractionHand.MAIN_HAND) && opener.isSneaking()) {
+        if (slot != null && isRightClick && opener.isSneaking()) {
             if (opener.getGameMode() == GameMode.SPECTATOR) return;
             if (!CONFIG.getBoolean("enable-instant-pickup", true)) return;
             if (CONFIG.getBoolean("instant-pickup-only-own", false) && !opener.getUniqueId().equals(player.getUniqueId())) return;
 
             PlayerInventory inventory = opener.getInventory();
+
+            // Check if inventory has any space at all
+            if (!InventoryUtils.hasSpace(inventory)) {
+                MESSAGEUTILS.sendLang(opener, "interact.inventory-full");
+                return;
+            }
+
             for (ItemStack it : gui.getContents()) {
                 if (it == null) continue;
 

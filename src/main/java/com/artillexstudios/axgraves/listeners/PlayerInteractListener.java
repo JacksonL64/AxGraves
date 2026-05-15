@@ -6,6 +6,7 @@ import com.artillexstudios.axgraves.grave.SpawnedGraves;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -23,9 +24,11 @@ public class PlayerInteractListener implements Listener {
         };
         if (hand == null) return;
 
+        boolean isRightClick = event.getAction() == Action.RIGHT_CLICK_BLOCK;
+
         for (Grave grave : SpawnedGraves.getGraves()) {
             if (!grave.getLocation().getBlock().equals(event.getClickedBlock())) continue;
-            grave.interact(event.getPlayer(), hand);
+            grave.interact(event.getPlayer(), hand, isRightClick);
             return;
         }
     }

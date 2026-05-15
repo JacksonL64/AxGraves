@@ -1,5 +1,7 @@
 package com.artillexstudios.axgraves.utils;
 
+import org.bukkit.Material;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 import org.jetbrains.annotations.NotNull;
@@ -56,5 +58,54 @@ public class InventoryUtils {
         int rows = amount / 9;
         if (amount % 9 != 0) rows++;
         return Math.max(rows, 1);
+    }
+
+    /**
+     * Checks if the player's inventory has any available space
+     * @param inventory The player's inventory to check
+     * @return true if there is at least one empty slot, false otherwise
+     */
+    public static boolean hasSpace(@NotNull PlayerInventory inventory) {
+        for (int i = 0; i < 36; i++) {
+            ItemStack item = inventory.getItem(i);
+            if (item == null || item.getType() == Material.AIR) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Counts how many items from the grave can fit in the player's inventory
+     * @param inventory The player's inventory
+     * @param graveContents The grave's inventory contents
+     * @return The number of items that can fit
+     */
+    public static int countItemsThatCanFit(@NotNull PlayerInventory inventory, @NotNull Inventory graveContents) {
+        int count = 0;
+        PlayerInventory tempInv = (PlayerInventory) inventory.getHolder().getInventory();
+
+        for (ItemStack item : graveContents.getContents()) {
+            if (item == null || item.getType() == Material.AIR) continue;
+
+            // Check if item can be added (this accounts for stacking)
+            int remaining = item.getAmount();
+            for (int i = 0; i < 36; i++) {
+                ItemStack slot = tempInv.getItem(i);
+                if (slot == null || slot.getType() == Material.AIR) {
+                    remaining = 0;
+                    break;
+                } else if (slot.isSimilar(item) && slot.getAmount() < slot.getMaxStackSize()) {
+                    remaining -= (slot.getMaxStackSize() - slot.getAmount());
+                    if (remaining <= 0) break;
+                }
+            }
+
+            if (remaining == 0) {
+                count++;
+            }
+        }
+
+        return count;
     }
 }
